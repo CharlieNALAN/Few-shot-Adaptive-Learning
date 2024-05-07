@@ -122,12 +122,13 @@ def seq(e):
 
 
 Acc = 0
-epoch = 20
+epoch1 = 45
+epoch2 = 150
 Threshold = 1
 while Acc < Acc_th:
-    seq(epoch)
+    seq(epoch1)
     Acc = len(test_dataset) / (len(test_dataset) + len(
-        delete_dataset) - a * Threshold)  # Todo:算法个人觉得能改进，保留意见，用a来扩充acc方法，如果删除图像太多，可能一轮就结束了，感觉应该和delete做系数
+        delete_dataset) - a * 0.6)  # Todo:算法个人觉得能改进，保留意见，用a来扩充acc方法，如果删除图像太多，可能一轮就结束了，感觉应该和delete做系数
     a = a + len(delete_dataset)
     print("ACC:{}，a:{}".format(Acc, a))
     onew_dataset = dataset  # 这句其实不写也没事，但是方便阅读还是加上吧
@@ -210,9 +211,11 @@ def phase2_eval():
             delete_dataset.remove(path)
 
 
-train(epoch)
+train(epoch2)
 phase2_eval()
 phase2_delete_num = len(delete_dataset)
 print("第二阶段重新加回{}张样本，清洗完成，现数据集有样本{}张，共清洗掉{}张".format(phase1_delete_num - phase2_delete_num,
                                                                                  len(dataset), phase2_delete_num))
 print("--------------------------二阶段清洗完成------------------------------")
+
+onew_dataset.save("./data")

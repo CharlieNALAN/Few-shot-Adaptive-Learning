@@ -1,6 +1,9 @@
 import json
 import os
+import shutil
+import random
 
+import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset, Subset
 
@@ -103,6 +106,55 @@ class TongueData(Dataset):
 
         print(f"文件: {path} 已添加到数据集中，标签为: {label_str}")
 
+    def save(self, new_path):
+        if not os.path.exists(new_path):
+            os.makedirs(new_path)
+
+        for img_path, label in zip(self.image_paths, self.image_labels):
+            filename = os.path.basename(img_path)
+            new_img_path = os.path.join(new_path, filename)
+
+            # 复制图像文件
+            shutil.copy(img_path, new_img_path)
+
+            # 更新 JSON 文件
+            json_path = os.path.join(self.root_dir, os.path.splitext(filename)[0] + '.json')
+            new_json_path = os.path.join(new_path, os.path.splitext(filename)[0] + '.json')
+
+            if os.path.exists(json_path):
+                with open(json_path, 'r') as file:
+                    data = json.load(file)
+
+                # 更新标签
+                for flag in data['flags']:
+                    data['flags'][flag] = (flag == label)
+
+                # 写回新的 JSON 文件
+                with open(new_json_path, 'w') as file:
+                    json.dump(data, file, indent=4)
+
+            print(f"文件: {filename} 及其 JSON 已被复制和更新到 {new_path}")
+
+    def sample_task(self, n_way, k_shot, q_query):
+        task_classes = np.random.choice(list(self.class_to_idx.values()), n_way, replace=False)
+        support_images = []
+        query_images = []
+
+        for cls in task_classes:
+            cls_images = [(img, lbl) for img, lbl in zip(self.image_paths, self.image_labels) if self.class_to_idx[lbl] == cls]
+            cls_images = random.sample(cls_images, k_shot + q_query)
+            support_images.extend([(img, cls) for img, lbl in cls_images[:k_shot]])
+            query_images.extend([(img, cls) for img, lbl in cls_images[k_shot:]])
+
+        if self.transform:
+            support_set = [(self.transform(Image.open(img)), lbl) for img, lbl in support_images]
+            query_set = [(self.transform(Image.open(img)), lbl) for img, lbl in query_images]
+        else:
+            support_set = [(Image.open(img), lbl) for img, lbl in support_images]
+            query_set = [(Image.open(img), lbl) for img, lbl in query_images]
+
+        return support_set, query_set
+
 
 class CustomSubset(Subset):
     def __init__(self, dataset, indices):
@@ -124,6 +176,7 @@ class CustomSubset(Subset):
             self.indices = [i - 1 if i > orig_index else i for i in self.indices]  # 更新 self.indices 中的所有后续索引
         else:
             print(f"Path {path} not found in subset.")
+
 
 
 class TonguesDatasetInJson(Dataset):
