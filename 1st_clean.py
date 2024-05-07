@@ -40,12 +40,12 @@ transform = transforms.Compose([
     transforms.ToTensor(),  # 转换为张量
 ])
 model = torchvision.models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-model.fc = nn.Linear(in_features=512, out_features=2, bias=True)
+model.fc = nn.Linear(in_features=512, out_features=4, bias=True)
 # train_dataset = dataset.TongueData("./dataset/train",transform=transform)
 # train_loader = DataLoader(train_dataset, batch_size=64)
 # test_dataset = dataset.TongueData("./dataset/val",transform=transform)
 # test_loader = DataLoader(test_dataset,batch_size=64)
-root_dir = './dataset/train'
+root_dir = './NewData'
 dataset = TongueData(root_dir=root_dir, transform=transform)
 
 # 计算训练集和测试集的大小
@@ -70,7 +70,7 @@ a = 0
 learn_rate = 0.001
 loss_fn = torch.nn.CrossEntropyLoss()
 loss_fn.to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=learn_rate)
+optimizer = torch.optim.SGD(model.parameters(), lr=learn_rate)
 
 
 def seq(e):
@@ -147,11 +147,11 @@ phase1_delete_num = len(delete_dataset)
 print("-------------------------------------------------------------------------------")
 
 model_VGG = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
-model_VGG.classifier[6] = nn.Linear(in_features=4096, out_features=2)
+model_VGG.classifier[6] = nn.Linear(in_features=4096, out_features=4)
 # print(model_VGG)
-model_VGG.load_state_dict(torch.load("./pth/pretrain_another.pth"))
+# model_VGG.load_state_dict(torch.load("./pth/pretrain_another.pth"))
 loss_fn2 = torch.nn.CrossEntropyLoss()
-optimizer2 = torch.optim.Adam(model_VGG.parameters())
+optimizer2 = torch.optim.SGD(model_VGG.parameters(), lr=learn_rate)
 model_VGG.to(device)
 loss_fn2.to(device)
 onew_loader = DataLoader(onew_dataset, batch_size=12, shuffle=True)
