@@ -12,16 +12,15 @@ transform=transforms.Compose([
         transforms.RandomRotation(30),  # 随机旋转±30度
         transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),  # 随机裁剪并调整为224x224
         transforms.ColorJitter(brightness=0.2, contrast=0.2),  # 随机亮度和对比度
+        # transforms.Resize((224,224)),
         transforms.ToTensor(),
     ])
 dataset = dataset.TonguesDatasetInJson('../data',transform=transform)
 total_size = len(dataset)
 test_size = 40
 train_size = total_size - test_size
-train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-train_loader = DataLoader(train_dataset, batch_size=20)
-test_loader = DataLoader(test_dataset, batch_size=10)
-model = torchvision.models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+#weights=ResNet18_Weights.IMAGENET1K_V1
+model = torchvision.models.resnet18()
 model.fc = nn.Linear(in_features=512,out_features=100)
 model.add_module("fc2",nn.Linear(in_features=100,out_features=4))
 # model = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
@@ -33,7 +32,9 @@ optimizer=torch.optim.SGD(model.parameters(),lr=0.001,momentum=0.5)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model.to(device)
 loss_fn.to(device)
-
+train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+train_loader = DataLoader(train_dataset, batch_size=20)
+test_loader = DataLoader(test_dataset, batch_size=10)
 # dataset.detect()
 # data=dataloader[0]
 # print(data)

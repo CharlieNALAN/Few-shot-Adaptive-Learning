@@ -15,69 +15,6 @@ from torchvision.models import ResNet18_Weights
 from dataset import TongueData
 
 
-# class TongueImageDataset(Dataset):
-#     def __init__(self, root_dir, transform=None):
-#         self.root_dir = root_dir
-#         self.transform = transform
-#         self.image_files = [f for f in os.listdir(root_dir) if f.endswith('.jpg')]
-#         self.label_map = {'LightRed': 0, 'Red': 1, 'White': 2, 'Purple': 3}
-#
-#     # def _load_labels(self):
-#     #     labels = {}
-#     #     for image_file in self.image_files:
-#     #         json_path = os.path.join(self.root_dir, image_file.replace('.jpg', '.json'))
-#     #         with open(json_path, 'r') as f:
-#     #             data = json.load(f)
-#     #             labels[image_file] = data['label']
-#     #     return labels
-#
-#     def __len__(self):
-#         return len(self.image_files)
-#
-#     def __getitem__(self, idx):
-#         """
-#                 根据索引idx获取样本
-#                 :param idx: 数据集中样本的索引
-#                 :return: 返回一个样本的图像和标签
-#                 """
-#         img_name = self.image_files[idx]
-#         img_path = os.path.join(self.root_dir, img_name)
-#         img = Image.open(img_path).convert('RGB')
-#
-#         # 加载对应的JSON文件
-#         json_path = os.path.join(self.root_dir, img_name.replace('.jpg', '.json'))
-#         with open(json_path, 'r') as f:
-#             metadata = json.load(f)
-#
-#         # 提取标签信息
-#         flags = metadata['flags']
-#         label = -1  # 初始化标签为-1，表示没有有效标签
-#         for key, value in flags.items():
-#             if value and key in self.label_map:
-#                 label = self.label_map[key]
-#                 break  # 假设每个图像只有一个标签
-#         # 可选的图片转换
-#         if self.transform:
-#             img = self.transform(img)
-#
-#         return img, label
-#
-#     def sample_task(self, n_way, k_shot, q_query):
-#         task_classes = np.random.choice(list(set(self.labels.values())), n_way, replace=False)
-#         support_images = []
-#         query_images = []
-#
-#         for cls in task_classes:
-#             cls_images = [(img, lbl) for img, lbl in zip(self.image_files, self.labels.values()) if lbl == cls]
-#             cls_images = random.sample(cls_images, k_shot + q_query)
-#             support_images.extend([(os.path.join(self.root_dir, img), lbl) for img, lbl in cls_images[:k_shot]])
-#             query_images.extend([(os.path.join(self.root_dir, img), lbl) for img, lbl in cls_images[k_shot:]])
-#
-#         support_set = [(self.transform(Image.open(img)), lbl) for img, lbl in support_images]
-#         query_set = [(self.transform(Image.open(img)), lbl) for img, lbl in query_images]
-#
-#         return support_set, query_set
-
 
 class ResNetMAML(nn.Module):
     def __init__(self, num_classes):
@@ -99,7 +36,7 @@ def train_maml(model, dataset, epochs=50, n_way=4, k_shot=5, q_query=15):
     for epoch in range(epochs):
         total_loss = 0
 
-        for _ in range(10):  # 假设每个epoch有100个任务
+        for _ in range(10):
             support_set, query_set = dataset.sample_task(n_way, k_shot, q_query)
             model.train()  # 确保模型在训练模式
 
